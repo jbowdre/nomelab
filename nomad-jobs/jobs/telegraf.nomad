@@ -78,7 +78,7 @@ job "telegraf" {
   [outputs.http.headers]
     Content-Type = "application/json"
     Authorization = "Splunk {{with secret "nomad/data/telegraf"}}{{.Data.data.SPLUNK_TOKEN}}{{end}}"
-  
+
 [[outputs.influxdb]]
   urls = ["http://influxdb.service.consul:8086"] # required
   database = "telegraf" # required
@@ -102,7 +102,7 @@ job "telegraf" {
 # Read metrics about network interface usage
 [[inputs.net]]
   # Specify an interface or all
-  interfaces = ["ens160"]
+  interfaces = ["ens192"]
 
 # Read metrics about swap memory usage
 [[inputs.swap]]
@@ -115,7 +115,7 @@ job "telegraf" {
   ## mount_points = ["/"]
   ## Ignore mount points by filesystem type.
   ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
- 
+
 [[inputs.diskio]]
   # devices = ["sda", "sdb"]
   # skip_serial_number = false

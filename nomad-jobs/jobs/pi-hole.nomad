@@ -62,7 +62,7 @@ job "pihole" {
 
       env {
         DNSSEC        = "true"
-        INTERFACE     = "ens160"
+        INTERFACE     = "ens192"
         PIHOLE_DNS_   = "${attr.unique.network.ip-address}#${NOMAD_PORT_cloudflared}"
         QUERY_LOGGING = "true"
         TZ            = "America/Los_Angeles"
@@ -216,7 +216,7 @@ EOF
       }
 
       env {
-        KEEPALIVED_INTERFACE     = "ens160"
+        KEEPALIVED_INTERFACE     = "ens192"
         KEEPALIVED_ROUTER_ID     = "53"
         KEEPALIVED_STATE         = "MASTER"
         KEEPALIVED_UNICAST_PEERS = ""

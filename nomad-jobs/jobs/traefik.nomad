@@ -162,7 +162,7 @@ job "traefik" {
       }
 
       env {
-        KEEPALIVED_INTERFACE     = "ens160"
+        KEEPALIVED_INTERFACE     = "ens192"
         KEEPALIVED_ROUTER_ID     = "52"
         KEEPALIVED_STATE         = "BACKUP"
         KEEPALIVED_UNICAST_PEERS = ""
@@ -212,7 +212,7 @@ job "traefik" {
         data = <<EOF
 [accessLog]
   filePath = "/opt/traefik/access-{{ env "attr.unique.network.ip-address" }}.log"
-  
+
 [api]
   dashboard = true
   #insecure  = true

@@ -88,7 +88,7 @@ job "homebridge" {
       }
 
       env {
-        KEEPALIVED_INTERFACE     = "ens160"
+        KEEPALIVED_INTERFACE     = "ens192"
         KEEPALIVED_ROUTER_ID     = "52"
         KEEPALIVED_STATE         = "BACKUP"
         KEEPALIVED_UNICAST_PEERS = ""
@@ -152,7 +152,7 @@ EOF
       template {
         data = <<EOF
     {
-      "bridge": 
+      "bridge":
         {
           "name": "Homebridge",
           "bind": "${var.subnet_cidr}.201",
