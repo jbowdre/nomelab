@@ -218,8 +218,8 @@ build {
 
   provisioner "shell" {
     inline = [
-      "chmod +x /home/${var.ssh_username}/VMware-ovftool-4.4.1-16812187-lin.x86_64.bundle",
-      "sudo /home/${var.ssh_username}/VMware-ovftool-4.4.1-16812187-lin.x86_64.bundle --eulas-agreed --required --console"
+      "chmod +x /home/${local.ubuntu_username}/VMware-ovftool-4.6.0-21452615-lin.x86_64.bundle",
+      "sudo /home/${local.ubuntu_username}/VMware-ovftool-4.6.0-21452615-lin.x86_64.bundle --eulas-agreed --required --console"
     ]
   }
 
