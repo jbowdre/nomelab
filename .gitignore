@@ -7,3 +7,6 @@ remote_backend.tf*
 .vagrant
 *.hclic
 dev
+env.sh
+*.crt
+*.bundle
