@@ -4,7 +4,7 @@ auto_encrypt = {
   tls = true
 }
 
-bind_addr = "{{ GetInterfaceIP `ens160` }}"
+bind_addr = "{{ GetInterfaceIP `ens192` }}"
 
 ca_file = "/etc/consul.d/consul-agent-ca.pem"
 

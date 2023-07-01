@@ -31,4 +31,4 @@ EOF
 
 k3s kubectl create -f dashboard.admin-user.yml -f dashboard.admin-user-role.yml
 sleep 1
-k3s kubectl -n kubernetes-dashboard describe secret admin-user-token | grep '^token' > $HOMEDIR/.dashboard-token
+k3s kubectl -n kubernetes-dashboard create token admin-user > $HOMEDIR/.dashboard-token

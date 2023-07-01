@@ -1,78 +1,69 @@
-# Read the documentation for locals blocks here:
-# https://www.packer.io/docs/templates/hcl_templates/blocks/locals
 locals {
-  consul_gossip  = vault("/packer/data/consul", "gossip")
-  consul_license = vault("/packer/data/consul", "license")
-  esxi_password  = vault("/packer/data/esxi", "esxi_password")
-  esxi_username  = vault("/packer/data/esxi", "esxi_username")
-  nomad_gossip   = vault("/packer/data/nomad", "gossip")
-  nomad_license  = vault("/packer/data/nomad", "license")
-  ssh_password   = vault("/packer/data/ubuntu", "castle")
-  timestamp      = regex_replace(timestamp(), "[- TZ:]", "")
-  vault_license  = vault("/packer/data/vault", "license")
-  vm_name        = "Castle-${local.timestamp}"
+  build_private_key_file    = data.sshkey.build.private_key_path
+  build_public_key          = data.sshkey.build.public_key
+  consul_gossip             = vault("nomelab/data/consul", "gossip")
+  consul_license            = vault("nomelab/data/consul", "license")
+  nomad_gossip              = vault("nomelab/data/nomad", "gossip")
+  nomad_license             = vault("nomelab/data/nomad", "license")
+  ubuntu_nameserver         = vault("nomelab/data/ubuntu", "nameserver")
+  ubuntu_password           = vault("nomelab/data/ubuntu", "password")
+  ubuntu_password_hash      = vault("nomelab/data/ubuntu", "password_hash")
+  ubuntu_public_key         = vault("nomelab/data/ubuntu", "public_key")
+  ubuntu_username           = vault("nomelab/data/ubuntu", "username")
+  vm_name                   = "castle"
+  vsphere_cluster           = vault("nomelab/data/vsphere", "cluster")
+  vsphere_datacenter        = vault("nomelab/data/vsphere", "datacenter")
+  vsphere_datastore         = vault("nomelab/data/vsphere", "datastore")
+  vsphere_endpoint          = vault("nomelab/data/vsphere", "endpoint")
+  vsphere_folder            = vault("nomelab/data/vsphere", "folder")
+  vsphere_network           = vault("nomelab/data/vsphere", "network")
+  vsphere_password          = vault("nomelab/data/vsphere", "password")
+  vsphere_username          = vault("nomelab/data/vsphere", "username")
+  data_source_content = {
+    "/meta-data"            = file("${abspath(path.root)}/meta-data")
+    "/user-data"            = templatefile("${abspath(path.root)}/user-data.pkrtpl.hcl", {
+      hostname              = local.vm_name
+      nameserver            = local.ubuntu_nameserver
+      password              = local.ubuntu_password_hash
+      ssh_keys              = concat([local.ubuntu_public_key], [local.build_public_key])
+      username              = local.ubuntu_username
+    })
+  }
 }
 
-# All generated input variables will be of 'string' type as this is how Packer JSON
-# views them; you can change their type later on. Read the variables type
-# constraints documentation
-# https://www.packer.io/docs/templates/hcl_templates/variables#type-constraints for more info.
-
-# Read the documentation for variable blocks here:
-# https://www.packer.io/docs/templates/hcl_templates/blocks/variable
 variable "cni_version" {
   type    = string
-  default = "1.0.1"
+  default = "1.3.0"
 }
 
 variable "consul_version" {
   type    = string
-  default = "1.12.0+ent"
+  default = "1.16.0"
 }
 
 variable "containerd_version" {
   type    = string
-  default = "0.9.2"
-}
-
-variable "esxi_host" {
-  type    = string
-  default = "esxi.local"
+  default = "0.9.4"
 }
 
 variable "iso_checksum" {
   type    = string
-  default = "sha256:28ccdb56450e643bad03bb7bcf7507ce3d8d90e8bf09e38f6bd9ac298a98eaad"
+  default = "sha256:5e38b55d57d94ff029719342357325ed3bda38fa80054f9330dc789cd2d43931"
 }
 
 variable "iso_url" {
   type    = string
-  default = "https://releases.ubuntu.com/20.04/ubuntu-20.04.4-live-server-amd64.iso"
-}
-
-variable "network_name" {
-  type    = string
-  default = "VM Network"
+  default = "https://releases.ubuntu.com/jammy/ubuntu-22.04.2-live-server-amd64.iso"
 }
 
 variable "nomad_version" {
   type    = string
-  default = "1.2.6+ent"
-}
-
-variable "remote_datastore" {
-  type    = string
-  default = "datastore1"
-}
-
-variable "ssh_username" {
-  type    = string
-  default = "ubuntu"
+  default = "1.5.6"
 }
 
 variable "vault_version" {
   type    = string
-  default = "1.10.2+ent"
+  default = "1.14.0"
 }
 
 variable "vm_cpu_num" {

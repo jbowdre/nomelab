@@ -1,9 +1,9 @@
 # Full configuration options can be found at https://www.nomadproject.io/docs/configuration
 
 advertise {
-  http = "{{ GetInterfaceIP `ens160` }}"
-  rpc  = "{{ GetInterfaceIP `ens160` }}"
-  serf = "{{ GetInterfaceIP `ens160` }}"
+  http = "{{ GetInterfaceIP `ens192` }}"
+  rpc  = "{{ GetInterfaceIP `ens192` }}"
+  serf = "{{ GetInterfaceIP `ens192` }}"
 }
 
 autopilot {
@@ -38,9 +38,9 @@ consul {
 
 data_dir = "/opt/nomad"
 
-leave_on_terminate = true  
+leave_on_terminate = true
 
-log_level = "INFO" 
+log_level = "INFO"
 
 plugin "containerd-driver" {
   config {
@@ -69,8 +69,7 @@ plugin "raw_exec" {
 server {
   enabled          = true
   bootstrap_expect = 3
-  encrypt          = ""
-  license_path     = "/etc/nomad.d/license.hclic"
+  // encrypt          = ""
   raft_protocol    = 3
   upgrade_version  = "0.0.0"
 }

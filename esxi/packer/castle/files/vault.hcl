@@ -4,8 +4,6 @@ cluster_addr = "https://ADDRESS:8201"
 
 cluster_name = "castle"
 
-license_path = "/etc/vault.d/license.hclic"
-
 listener "tcp" {
   address = "0.0.0.0:8200"
 

@@ -1,79 +1,75 @@
-# source blocks are generated from your builders; a source can be referenced in
-# build blocks. A build block runs provisioner and post-processors on a
-# source. Read the documentation for source blocks here:
-# https://www.packer.io/docs/templates/hcl_templates/blocks/source
-source "vmware-iso" "ubuntu-20-castle" {
-  boot_command = [
-    "<enter><wait2><enter><wait><f6><esc><wait>",
-    " autoinstall<wait2> ds=nocloud",
-    "<wait><enter>"
-  ]
-  boot_wait              = "5s"
-  cd_files               = ["./meta-data", "./user-data"]
-  cd_label               = "cidata"
-  cpus                   = "${var.vm_cpu_num}"
-  disk_size              = "${var.vm_disk_size}"
-  disk_type_id           = "thin"
-  guest_os_type          = "ubuntu-64"
-  headless               = "false"
-  iso_checksum           = var.iso_checksum
-  iso_url                = var.iso_url
-  keep_registered        = true
-  memory                 = "${var.vm_mem_size}"
-  network_adapter_type   = "vmxnet3"
-  network_name           = "${var.network_name}"
-  remote_datastore       = "${var.remote_datastore}"
-  remote_host            = "${var.esxi_host}"
-  remote_password        = "${local.esxi_password}"
-  remote_port            = 22
-  remote_type            = "esx5"
-  remote_username        = "${local.esxi_username}"
-  shutdown_command       = "sudo -S shutdown -P now"
-  skip_export            = true
-  ssh_handshake_attempts = "1000"
-  ssh_password           = "${local.ssh_password}"
-  ssh_timeout            = "1200s"
-  ssh_username           = "${var.ssh_username}"
-  vm_name                = "${local.vm_name}"
-  vmx_data = {
-    "virtualhw.version" = "17"
+packer {
+  required_version = ">= 1.8.2"
+  required_plugins {
+    vsphere = {
+      version = ">= 1.0.8"
+      source = "github.com/hashicorp/vsphere"
+    }
+    sshkey = {
+      version                   = "= 1.0.3"
+      source                    = "github.com/ivoronin/sshkey"
+    }
   }
-  # vmx_data_post may not still be required, but added to ensure
-  # cd drives are removed and not booted from after provisioning
-  vmx_data_post = {
-    "bios.bootorder"        = "hdd"
-    "ide0:0.startConnected" = "FALSE"
-    "ide0:1.startConnected" = "FALSE"
-    "ide1:0.startConnected" = "FALSE"
-    "ide1:1.startConnected" = "FALSE"
-    "ide0:0.deviceType"     = "cdrom-raw"
-    "ide0:1.deviceType"     = "cdrom-raw"
-    "ide1:0.deviceType"     = "cdrom-raw"
-    "ide1:1.deviceType"     = "cdrom-raw"
-    "ide0:0.clientDevice"   = "TRUE"
-    "ide0:1.clientDevice"   = "TRUE"
-    "ide1:0.clientDevice"   = "TRUE"
-    "ide1:1.clientDevice"   = "TRUE"
-    "ide0:0.present"        = "FALSE"
-    "ide0:1.present"        = "FALSE"
-    "ide1:0.present"        = "TRUE"
-    "ide1:1.present"        = "FALSE"
-    "ide0:0.fileName"       = "emptyBackingString"
-    "ide0:1.fileName"       = "emptyBackingString"
-    "ide1:0.fileName"       = "emptyBackingString"
-    "ide1:1.fileName"       = "emptyBackingString"
-  }
-  vnc_over_websocket = "true"
 }
 
-# a build block invokes sources and runs provisioning steps on them. The
-# documentation for build blocks can be found here:
-# https://www.packer.io/docs/templates/hcl_templates/blocks/build
+data "sshkey" "build" {
+  type                          = "ed25519"
+  name                          = "packer_key"
+}
+
+source "vsphere-iso" "ubuntu-22-castle" {
+  insecure_connection         = true
+  password                    = local.vsphere_password
+  username                    = local.vsphere_username
+  vcenter_server              = local.vsphere_endpoint
+  cluster                     = local.vsphere_cluster
+  datacenter                  = local.vsphere_datacenter
+  datastore                   = local.vsphere_datastore
+  folder                      = local.vsphere_folder
+  boot_command = [
+    "<esc><wait>c",
+    "linux /casper/vmlinuz --- autoinstall ds=\"nocloud\"",
+    "<enter><wait>",
+    "initrd /casper/initrd",
+    "<enter><wait>",
+    "boot",
+    "<enter>"
+  ]
+  boot_order                  = "disk,cdrom"
+  boot_wait                   = "5s"
+  cd_content                  = local.data_source_content
+  cd_label                    = "cidata"
+  communicator                = "ssh"
+  CPUs                        = "${var.vm_cpu_num}"
+  disk_controller_type        = ["pvscsi"]
+  firmware                    = "efi-secure"
+  guest_os_type               = "ubuntu64Guest"
+  iso_checksum                = var.iso_checksum
+  iso_url                     = var.iso_url
+  RAM                         = "${var.vm_mem_size}"
+  remove_cdrom                = true
+  shutdown_command            = "sudo -S shutdown -P now"
+  ssh_clear_authorized_keys   = true
+  ssh_private_key_file        = local.build_private_key_file
+  ssh_timeout                 = "1200s"
+  ssh_username                = "${local.ubuntu_username}"
+  vm_name                     = "${local.vm_name}"
+  vm_version                  = "19"
+  network_adapters {
+    network                   = "${local.vsphere_network}"
+    network_card              = "vmxnet3"
+  }
+  storage {
+    disk_size                 = "${var.vm_disk_size}"
+    disk_thin_provisioned     = true
+  }
+}
+
 build {
-  sources = ["source.vmware-iso.ubuntu-20-castle"]
+  sources = ["source.vsphere-iso.ubuntu-22-castle"]
 
   provisioner "file" {
-    destination = "/home/${var.ssh_username}/"
+    destination = "/home/${local.ubuntu_username}/"
     source      = "files/"
   }
 
@@ -87,11 +83,11 @@ build {
       "sudo chown root:root consul",
       "sudo mv consul /usr/bin/",
       "consul --version",
-      "sudo -H -u ${var.ssh_username} consul -autocomplete-install",
+      "sudo -H -u ${local.ubuntu_username} consul -autocomplete-install",
       "sudo useradd --system --home /etc/consul.d --shell /bin/false consul",
       "sudo mkdir -p -m 755 /opt/consul /etc/consul.d",
       "sudo chown -R consul:consul /opt/consul /etc/consul.d",
-      "sudo mv /home/${var.ssh_username}/consul.service /usr/lib/systemd/system/consul.service",
+      "sudo mv /home/${local.ubuntu_username}/consul.service /usr/lib/systemd/system/consul.service",
     ]
   }
 
@@ -105,11 +101,11 @@ build {
       "sudo chown root:root nomad",
       "sudo mv nomad /usr/bin/",
       "nomad --version",
-      "sudo -H -u ${var.ssh_username} nomad -autocomplete-install",
+      "sudo -H -u ${local.ubuntu_username} nomad -autocomplete-install",
       "sudo useradd --system --home /etc/nomad.d --shell /bin/false nomad",
       "sudo mkdir -p -m 755 /opt/nomad /etc/nomad.d",
       "sudo chown -R nomad:nomad /opt/nomad /etc/nomad.d",
-      "sudo mv /home/${var.ssh_username}/nomad.service /usr/lib/systemd/system/nomad.service",
+      "sudo mv /home/${local.ubuntu_username}/nomad.service /usr/lib/systemd/system/nomad.service",
     ]
   }
 
@@ -123,11 +119,11 @@ build {
       "sudo chown root:root vault",
       "sudo mv vault /usr/bin/",
       "vault --version",
-      "sudo -H -u ${var.ssh_username} vault -autocomplete-install",
+      "sudo -H -u ${local.ubuntu_username} vault -autocomplete-install",
       "sudo useradd --system --home /etc/vault.d --shell /bin/false vault",
       "sudo mkdir -p -m 755 /opt/vault/tls /etc/vault.d",
       "sudo chown -R vault:vault /opt/vault /etc/vault.d",
-      "sudo mv /home/${var.ssh_username}/vault.service /usr/lib/systemd/system/vault.service",
+      "sudo mv /home/${local.ubuntu_username}/vault.service /usr/lib/systemd/system/vault.service",
       "sudo touch /var/log/vault_audit.log",
       "sudo chown vault:vault /var/log/vault_audit.log",
       "sudo touch /var/log/vault_audit.pos",
@@ -151,37 +147,16 @@ build {
 
   provisioner "shell" {
     environment_vars = [
-      "consul_license=${local.consul_license}",
-      "nomad_license=${local.nomad_license}",
-      "vault_license=${local.vault_license}"
-    ]
-    inline = [
-      "touch /home/${var.ssh_username}/consul.hclic",
-      "echo $consul_license >> /home/${var.ssh_username}/consul.hclic",
-      "sudo mv /home/${var.ssh_username}/consul.hclic /etc/consul.d/license.hclic",
-      "touch /home/${var.ssh_username}/nomad.hclic",
-      "echo $nomad_license >> /home/${var.ssh_username}/nomad.hclic",
-      "sudo mv /home/${var.ssh_username}/nomad.hclic /etc/nomad.d/license.hclic",
-      "touch /home/${var.ssh_username}/vault.hclic",
-      "echo $vault_license >> /home/${var.ssh_username}/vault.hclic",
-      "sudo mv /home/${var.ssh_username}/vault.hclic /etc/vault.d/license.hclic",
-      "sudo chown vault:vault /etc/vault.d/license.hclic",
-      "sudo chmod 640 /etc/vault.d/license.hclic"
-    ]
-  }
-
-  provisioner "shell" {
-    environment_vars = [
       "consul_gossip=${local.consul_gossip}",
       "nomad_gossip=${local.nomad_gossip}"
     ]
     inline = [
-      "sudo cp /home/${var.ssh_username}/consul-agent-ca.pem /etc/vault.d/.",
-      "sudo mv /home/${var.ssh_username}/consul-agent-ca.pem /etc/consul.d/.",
-      "sudo mv /home/${var.ssh_username}/consul.hcl /etc/consul.d/.",
-      "sudo mv /home/${var.ssh_username}/nomad.hcl /etc/nomad.d/.",
-      "chmod +x /home/${var.ssh_username}/gossip.sh",
-      "/home/${var.ssh_username}/gossip.sh",
+      "sudo cp /home/${local.ubuntu_username}/consul-agent-ca.pem /etc/vault.d/.",
+      "sudo mv /home/${local.ubuntu_username}/consul-agent-ca.pem /etc/consul.d/.",
+      "sudo mv /home/${local.ubuntu_username}/consul.hcl /etc/consul.d/.",
+      "sudo mv /home/${local.ubuntu_username}/nomad.hcl /etc/nomad.d/.",
+      "chmod +x /home/${local.ubuntu_username}/gossip.sh",
+      "/home/${local.ubuntu_username}/gossip.sh",
       "sudo chown -R consul:consul /etc/consul.d",
       "sudo chown -R nomad:nomad /etc/nomad.d",
       "sudo chmod 640 /etc/consul.d/* /etc/nomad.d/*"
@@ -194,25 +169,25 @@ build {
       "echo \"export CONSUL_CACERT=/etc/consul.d/consul-agent-ca.pem\" | sudo tee -a /root/.bashrc",
       "echo \"export CONSUL_CLIENT_KEY=/etc/consul.d/dc1-server-consul-key.pem\" | sudo tee -a /root/.bashrc",
       "echo \"export CONSUL_CLIENT_CERT=/etc/consul.d/dc1-server-consul.pem\" | sudo tee -a /root/.bashrc",
-      "echo \"export CONSUL_HTTP_ADDR=https://127.0.0.1:8501\" | sudo tee -a /home/${var.ssh_username}/.bashrc",
-      "echo \"export CONSUL_CACERT=/etc/consul.d/consul-agent-ca.pem\" | sudo tee -a /home/${var.ssh_username}/.bashrc",
-      "echo \"export CONSUL_CLIENT_KEY=/etc/consul.d/dc1-server-consul-key.pem\" | sudo tee -a /home/${var.ssh_username}/.bashrc",
-      "echo \"export CONSUL_CLIENT_CERT=/etc/consul.d/dc1-server-consul.pem\" | sudo tee -a /home/${var.ssh_username}/.bashrc"
+      "echo \"export CONSUL_HTTP_ADDR=https://127.0.0.1:8501\" | sudo tee -a /home/${local.ubuntu_username}/.bashrc",
+      "echo \"export CONSUL_CACERT=/etc/consul.d/consul-agent-ca.pem\" | sudo tee -a /home/${local.ubuntu_username}/.bashrc",
+      "echo \"export CONSUL_CLIENT_KEY=/etc/consul.d/dc1-server-consul-key.pem\" | sudo tee -a /home/${local.ubuntu_username}/.bashrc",
+      "echo \"export CONSUL_CLIENT_CERT=/etc/consul.d/dc1-server-consul.pem\" | sudo tee -a /home/${local.ubuntu_username}/.bashrc"
     ]
   }
 
   provisioner "shell" {
     inline = [
-      "sudo mv /home/${var.ssh_username}/root.crt /usr/local/share/ca-certificates/",
+      "sudo mv /home/${local.ubuntu_username}/root.crt /usr/local/share/ca-certificates/",
       "sudo update-ca-certificates"
     ]
   }
 
   provisioner "shell" {
     inline = [
-      "sudo apt-get update",
-      "sudo apt-get upgrade -y",
-      "sudo apt-get autoremove -y"
+      "DEBIAN_FRONTEND=noninteractive sudo apt-get update; sleep 10",
+      "DEBIAN_FRONTEND=noninteractive sudo apt-get upgrade -y; sleep 10",
+      "DEBIAN_FRONTEND=noninteractive sudo apt-get autoremove -y"
     ]
   }
 
@@ -233,17 +208,17 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo apt-get install -y apt-transport-https gnupg2",
+      "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y apt-transport-https gnupg2",
       "curl --silent -sL 'https://deb.dl.getenvoy.io/public/gpg.8115BA8E629CC074.key' | sudo gpg --dearmor -o /usr/share/keyrings/getenvoy-keyring.gpg",
       "echo \"deb [arch=amd64 signed-by=/usr/share/keyrings/getenvoy-keyring.gpg] https://deb.dl.getenvoy.io/public/deb/ubuntu $(lsb_release -cs) main\" | sudo tee /etc/apt/sources.list.d/getenvoy.list",
-      "sudo apt-get update",
-      "sudo apt-get install -y getenvoy-envoy"
+      "DEBIAN_FRONTEND=noninteractive sudo apt-get update",
+      "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y getenvoy-envoy"
     ]
   }
 
   provisioner "shell" {
     inline = [
-      "sudo wget https://github.com/bcicen/ctop/releases/download/0.7.6/ctop-0.7.6-linux-amd64 -O /usr/local/bin/ctop",
+      "sudo wget -q https://github.com/bcicen/ctop/releases/download/0.7.6/ctop-0.7.6-linux-amd64 -O /usr/local/bin/ctop",
       "sudo chmod +x /usr/local/bin/ctop"
     ]
   }

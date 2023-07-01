@@ -1,6 +1,6 @@
 # Full configuration options can be found at https://www.consul.io/docs/agent/options.html
 
-advertise_addr = "{{ GetInterfaceIP `ens160` }}"
+advertise_addr = "{{ GetInterfaceIP `ens192` }}"
 
 auto_encrypt {
   allow_tls = true
@@ -29,11 +29,9 @@ data_dir = "/opt/consul"
 
 enable_local_script_checks = true
 
-encrypt = ""
+// encrypt = ""
 
 key_file = "/etc/consul.d/dc1-server-consul-key.pem"
-
-license_path = "/etc/consul.d/license.hclic"
 
 log_level = "INFO"
 
@@ -49,7 +47,7 @@ ports {
 
 primary_datacenter = "dc1"
 
-retry_join = ["192.168.0.101", "192.168.0.102", "192.168.0.103", "192.168.0.104", "192.168.0.105", "192.168.0.106"]
+retry_join = ["192.168.1.81", "192.168.1.82", "192.168.1.83", "192.168.1.84", "192.168.1.85", "192.168.1.86"]
 
 server = true
 
