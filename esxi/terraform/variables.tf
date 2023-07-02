@@ -1,32 +1,17 @@
-variable "esxi_datastore" {
-  description = "The ESXi datastore where the virtual machines will be created"
-  type        = string
-}
-
-variable "esxi_datastore_nas_mirror" {
-  description = "The ESXi datastore where the NAS mirror disk will be created"
-  type        = string
-}
-
-variable "esxi_hostname" {
-  description = "The address of your ESXi host"
-  type        = string
-}
-
-variable "esxi_network_name" {
-  description = "The ESXi network name to attach the network interfaces"
-  type        = string
-}
-
-variable "esxi_password" {
-  description = "ESXi account password to use"
-  sensitive   = true
-  type        = string
-}
-
-variable "esxi_username" {
-  description = "ESXi user account name"
-  type        = string
+locals {
+  vsphere_cluster             = data.vault_kv_secret_v2.vsphere.data["cluster"]
+  vsphere_datacenter          = data.vault_kv_secret_v2.vsphere.data["datacenter"]
+  vsphere_datastore           = data.vault_kv_secret_v2.vsphere.data["datastore"]
+  vsphere_deployment_folder   = data.vault_kv_secret_v2.vsphere.data["deployment_folder"]
+  vsphere_endpoint            = data.vault_kv_secret_v2.vsphere.data["endpoint"]
+  vsphere_insecure_connection = data.vault_kv_secret_v2.vsphere.data["insecure_connection"]
+  vsphere_network             = data.vault_kv_secret_v2.vsphere.data["network"]
+  vsphere_password            = data.vault_kv_secret_v2.vsphere.data["password"]
+  vsphere_template_folder     = data.vault_kv_secret_v2.vsphere.data["template_folder"]
+  vsphere_username            = data.vault_kv_secret_v2.vsphere.data["username"]
+  ubuntu_password             = data.vault_kv_secret_v2.ubuntu.data["password"]
+  ubuntu_username             = data.vault_kv_secret_v2.ubuntu.data["username"]
+  ubuntu_ssh_private_key =
 }
 
 variable "nas_allow_ip_cidr" {

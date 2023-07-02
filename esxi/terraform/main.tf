@@ -8,16 +8,46 @@ provider "vault" {
   # address = "https://vault.example.net:8200"
 }
 
+data "vault_kv_secret_v2" "consul" {
+  mount = "nomelab"
+  name = "consul"
+}
+
+data "vault_kv_secret_v2" "nomad" {
+  mount = "nomelab"
+  name = "nomad"
+}
+
+data "vault_kv_secret_v2" "ubuntu" {
+  mount = "nomelab"
+  name = "ubuntu"
+}
+
+data "vault_kv_secret_v2" "vsphere" {
+  mount = "nomelab"
+  name = "vsphere"
+}
+
 resource "vault_approle_auth_backend_role_secret_id" "wrapped_secret_id" {
   role_name    = "bootstrap"
   wrapping_ttl = "600s"
   count        = 3
 }
 
-provider "esxi" {
-  esxi_hostname = var.esxi_hostname
-  esxi_username = var.esxi_username
-  esxi_password = var.esxi_password
+provider "vsphere" {
+  user = var.vsphere-user
+  password = var.vsphere-password
+  vsphere_server = var.vsphere-server
+  allow_unverified_ssl = var.vsphere-unverified-ssl
+}
+
+data "vsphere_datacenter" "dc" {
+  name = var.vsphere-datacenter
+}
+
+data "vsphere_datastore" "datastore" {
+  name = var.vm-datastore
+  datacenter_id = data.vsphere_datacenter.dc.id
 }
 
 resource "esxi_guest" "blue" {
@@ -183,7 +213,7 @@ resource "null_resource" "get-k3s-config" {
 
   provisioner "local-exec" {
     command = <<EOC
-      echo '${var.ssh_private_key}' > private.key; 
+      echo '${var.ssh_private_key}' > private.key;
       chmod 400 private.key;
       scp -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i private.key ${var.ssh_username}@${esxi_guest.k3s.ip_address}:k3s.yaml .
    EOC
