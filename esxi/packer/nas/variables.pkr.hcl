@@ -15,7 +15,7 @@ locals {
   vsphere_datacenter        = vault("nomelab/data/vsphere", "datacenter")
   vsphere_datastore         = vault("nomelab/data/vsphere", "datastore")
   vsphere_endpoint          = vault("nomelab/data/vsphere", "endpoint")
-  vsphere_folder            = vault("nomelab/data/vsphere", "folder")
+  vsphere_folder            = vault("nomelab/data/vsphere", "template_folder")
   vsphere_network           = vault("nomelab/data/vsphere", "network")
   vsphere_password          = vault("nomelab/data/vsphere", "password")
   vsphere_username          = vault("nomelab/data/vsphere", "username")
