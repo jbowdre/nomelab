@@ -1,10 +1,10 @@
 locals {
   build_private_key_file    = data.sshkey.build.private_key_path
   build_public_key          = data.sshkey.build.public_key
-  consul_gossip             = vault("nomelab/data/consul", "gossip")
-  consul_license            = vault("nomelab/data/consul", "license")
-  nomad_gossip              = vault("nomelab/data/nomad", "gossip")
-  nomad_license             = vault("nomelab/data/nomad", "license")
+  consul_gossip             = vault("nomelab/data/deployment", "consul_gossip")
+  consul_license            = vault("nomelab/data/deployment", "consul_license")
+  nomad_gossip              = vault("nomelab/data/deployment", "nomad_gossip")
+  nomad_license             = vault("nomelab/data/deployment", "nomad_license")
   ubuntu_nameserver         = vault("nomelab/data/ubuntu", "nameserver")
   ubuntu_password           = vault("nomelab/data/ubuntu", "password")
   ubuntu_password_hash      = vault("nomelab/data/ubuntu", "password_hash")
